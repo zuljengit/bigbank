@@ -1,0 +1,67 @@
+html, body {
+    height: 100%;
+}
+
+.offset-top {
+    margin-top: 20px;
+}
+
+.container {
+    margin-top: 30px;
+    background-color: red;
+}
+
+.game-div {
+    background-color: lightgray;
+    text-align: center;
+}
+
+.game-div p {
+    font-weight: bold;
+    margin: 2px !important;
+}
+
+.tasks-div {
+    background-color: #ABFADC;
+    text-align: center;
+}
+
+.tasks-div p {
+    font-weight: bold;
+    margin: 0 !important;
+}
+
+.shop-div {
+    background-color: #F092A5;
+    text-align: center;
+}
+
+.shop-div p {
+    font-weight: bold;
+    margin: 2px !important;
+}
+
+h4 {
+    padding-bottom: 5px;
+}
+
+.jumbotron {
+    padding: 0 !important;
+    margin: 4px !important;
+    position: relative;
+}
+
+.jumbotron button {
+    position:absolute;
+    padding: 4px;
+    right: 6px;
+    bottom: 2px;
+}
+
+.solve-success {
+    color: green;
+}
+
+.solve-fail {
+    color: red;
+}

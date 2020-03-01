@@ -1,0 +1,179 @@
+<!DOCTYPE HTML>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:v-on="http://www.w3.org/1999/xhtml">
+<head>
+    <title>Dragon game</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <link href="../static/css/game.css" th:href="@{/css/game.css}" rel="stylesheet"/>
+    <link th:href="@{/webjars/bootstrap/4.1.3/css/bootstrap.min.css}" rel="stylesheet" media="screen"/>
+</head>
+<body>
+<div class="container-fluid h-100 px-0">
+    <div class="row no-gutters h-100" id="vue-app">
+        <div class="game-div col-2">
+            <div class="offset-top">
+                <button class="btn btn-primary" v-on:click="startGame">Start game</button>
+            </div>
+            <div class="offset-top">
+                <h4>Game info</h4>
+                <p>Game id: {{gameId}}</p>
+                <p>Lives: {{lives}}</p>
+                <p>Gold: {{gold}}</p>
+                <p>Level: {{level}}</p>
+                <p>Score: {{score}}</p>
+                <p>Highscore: {{highScore}}</p>
+                <p>Turn: {{turn}}</p>
+            </div>
+            <div class="offset-top">
+                <button class="btn btn-success" v-on:click="getReputation">Get reputation</button>
+            </div>
+            <div class="offset-top">
+                <h4>Game reputation</h4>
+                <p>People: {{people}}</p>
+                <p>State: {{state}}</p>
+                <p>Underworld: {{underworld}}</p>
+            </div>
+            <div class="offset-top">
+                <h4>Solve result</h4>
+                <p v-if="success" class="solve-success">{{message}}</p>
+                <p v-else class="solve-fail">{{message}}</p>
+            </div>
+        </div>
+        <div class="tasks-div col-6">
+            <div class="offset-top">
+                <button class="btn btn-success" v-on:click="getTasks">Get tasks</button>
+            </div>
+            <div class="offset-top">
+                <div v-for="task in tasks" class="jumbotron">
+                    <p>{{task.message}}</p>
+                    <p>Reward: {{task.reward}}</p>
+                    <p>Probability: {{task.probability}}</p>
+                    <p>Expires in: {{task.expiresIn}}</p>
+                    <button class="btn btn-primary" v-on:click="solveTask(task.adId)">Solve</button>
+                </div>
+            </div>
+        </div>
+        <div class="shop-div col-4">
+            <div class="offset-top">
+                <button class="btn btn-success" v-on:click="getItems">Get items</button>
+            </div>
+            <div class="offset-top">
+                <div v-for="item in items" class="jumbotron">
+                    <p>Item name: {{item.name}}</p>
+                    <p>Item cost: {{item.cost}}</p>
+                    <button class="btn btn-primary" v-on:click="buyItem(item.id)">Buy</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/6.26.0/babel.min.js"></script>
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<script type="text/javascript">
+    new Vue({
+        el: "#vue-app",
+        data: {
+            gameId: '', lives: '', gold: '', level: '', score: '', highScore: '', turn: '',
+            people: '', state: '', underworld: '',
+            tasks: [], success: false, message: '', items: []
+        },
+        methods: {
+            startGame: function () {
+                this.clearData();
+                axios
+                    .post('start')
+                    .then((response) => {
+                        this.gameId = response.data.gameId;
+                        this.lives = response.data.lives;
+                        this.gold = response.data.gold;
+                        this.level = response.data.level;
+                        this.score = response.data.score;
+                        this.highScore = response.data.highScore;
+                        this.turn = response.data.turn;
+                    });
+            },
+            getReputation: function () {
+                axios
+                    .post('reputation', null, {params: {'gameId': this.gameId}})
+                    .then((response) => {
+                        this.people = response.data.people;
+                        this.state = response.data.state;
+                        this.underworld = response.data.underworld;
+                    });
+            },
+            getTasks: function () {
+                axios
+                    .get('tasks', {params: {'gameId': this.gameId}})
+                    .then((response) => {
+                        this.tasks = response.data;
+                    });
+            },
+            solveTask: function (adId) {
+                axios
+                    .post('solve', null, {params: {'gameId': this.gameId, 'adId': adId}})
+                    .then((response) => {
+                            this.success = response.data.success;
+                            this.lives = response.data.lives;
+                            this.gold = response.data.gold;
+                            this.score = response.data.score;
+                            this.highScore = response.data.highScore;
+                            this.turn = response.data.turn;
+                            this.message = response.data.message;
+                            this.tasks.splice(this.tasks.findIndex(task => task.adId === adId), 1);
+                    }, (error) => this.clearData());
+            },
+            getItems: function () {
+                axios
+                    .get('shop', {params: {'gameId': this.gameId}})
+                    .then((response) => {
+                        this.items = response.data;
+                    });
+            },
+            buyItem: function (itemId) {
+                axios
+                    .post('shop/buy', null, {params: {'gameId': this.gameId, 'itemId': itemId}})
+                    .then((response) => {
+                        this.gold = response.data.gold;
+                        this.lives = response.data.lives;
+                        this.level = response.data.level;
+                        this.turn = response.data.turn;
+                    });
+            },
+            clearData: function () {
+                this.tasks = [];
+                this.message = '';
+            }
+        }
+    });
+</script>
+</body>
+</html>
+
+<!--<div class="container h-100">-->
+<!--    <div class="">-->
+<!--        <div class="main">-->
+<!--            <form th:action="@{/start}" method="post">-->
+<!--                <div class="offset-top">-->
+<!--                    <button type="submit" class="btn btn-primary col-sm-12">Start new game</button>-->
+<!--                </div>-->
+<!--                <div class="form-group offset-top">-->
+<!--                    <h4>Game status</h4>-->
+<!--                    <span th:text="'Game id: ' + ${gameId}"></span><br>-->
+<!--                    <span th:text="'Lives: ' + ${lives}"></span><br>-->
+<!--                    <span th:text="'Gold: ' + ${gold}"></span><br>-->
+<!--                    <span th:text="'Level: ' + ${level}"></span><br>-->
+<!--                    <span th:text="'Score: ' + ${score}"></span><br>-->
+<!--                    <span th:text="'Highscore: ' + ${highScore}"></span><br>-->
+<!--                    <span th:text="'Turn: ' + ${turn}"></span><br>-->
+<!--                </div>--><!--
+<!--            </form>-->
+<!--        </div>-->
+<!--    </div>-->
+<!--</div>-->
+
+<!--                    <label for="gameid">Game id:</label>-->
+<!--                    <input th:value="${gameId}" type="text" class="form-control" id="gameid" disabled>-->
+
+<!--    <link href="css/game.css" rel="stylesheet"/>-->
+<!--    <link href="webjars/bootstrap/4.1.3/css/bootstrap.min.css" rel="stylesheet" media="screen"/>-->
