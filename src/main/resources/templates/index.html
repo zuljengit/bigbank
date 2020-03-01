@@ -33,7 +33,7 @@
                 <p>Underworld: {{underworld}}</p>
             </div>
             <div class="offset-top">
-                <h4>Solve result</h4>
+                <h4>Turn result</h4>
                 <p v-if="success" class="solve-success">{{message}}</p>
                 <p v-else class="solve-fail">{{message}}</p>
             </div>
@@ -60,7 +60,7 @@
                 <div v-for="item in items" class="jumbotron">
                     <p>Item name: {{item.name}}</p>
                     <p>Item cost: {{item.cost}}</p>
-                    <button class="btn btn-primary" v-on:click="buyItem(item.id)">Buy</button>
+                    <button class="btn btn-primary" v-on:click="buyItem(item.id, item.name, item.cost)">Buy</button>
                 </div>
             </div>
         </div>
@@ -80,7 +80,7 @@
         },
         methods: {
             startGame: function () {
-                this.clearData();
+                this.reset();
                 axios
                     .post('start')
                     .then((response) => {
@@ -113,6 +113,9 @@
                 axios
                     .post('solve', null, {params: {'gameId': this.gameId, 'adId': adId}})
                     .then((response) => {
+                        if (response.data.lives === 0) {
+                            this.endGame();
+                        } else {
                             this.success = response.data.success;
                             this.lives = response.data.lives;
                             this.gold = response.data.gold;
@@ -121,7 +124,12 @@
                             this.turn = response.data.turn;
                             this.message = response.data.message;
                             this.tasks.splice(this.tasks.findIndex(task => task.adId === adId), 1);
-                    }, (error) => this.clearData());
+                        }
+                    }, () => {
+                        this.success = false;
+                        this.tasks = [];
+                        this.message = 'Tasks expired';
+                    });
             },
             getItems: function () {
                 axios
@@ -130,19 +138,31 @@
                         this.items = response.data;
                     });
             },
-            buyItem: function (itemId) {
+            buyItem: function (itemId, name, cost) {
+                if (cost > this.gold) {
+                    this.success = false;
+                    this.message = 'Not enough money to buy ' + name + '!';
+                    return;
+                }
                 axios
                     .post('shop/buy', null, {params: {'gameId': this.gameId, 'itemId': itemId}})
                     .then((response) => {
+                        this.success = true;
                         this.gold = response.data.gold;
                         this.lives = response.data.lives;
                         this.level = response.data.level;
                         this.turn = response.data.turn;
+                        this.message = 'Successfully bought ' + name + '!';
                     });
             },
-            clearData: function () {
+            reset: function () {
                 this.tasks = [];
+                this.items = [];
                 this.message = '';
+            },
+            endGame: function () {
+                this.items = [];
+                this.tasks = [];
             }
         }
     });
