@@ -47,4 +47,13 @@ public class Task {
     public void setProbability(String probability) {
         this.probability = probability;
     }
+
+    @Override
+    public String toString() {
+        return "Task{" +
+                "adId='" + adId + '\'' +
+                ", reward='" + reward + '\'' +
+                ", probability='" + probability + '\'' +
+                '}';
+    }
 }

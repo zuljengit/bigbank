@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.constraints.NotNull;
+import java.util.List;
 
 @RestController
 public class GameRestController {
@@ -30,7 +31,7 @@ public class GameRestController {
     }
 
     @GetMapping(value = "/tasks", produces = MediaType.APPLICATION_JSON_VALUE)
-    public Task[] getTasks(@NotNull @RequestParam String gameId) {
+    public List<Task> getTasks(@NotNull @RequestParam String gameId) {
         return restService.getTasks(gameId);
     }
 
@@ -40,7 +41,7 @@ public class GameRestController {
     }
 
     @GetMapping(value = "/shop", produces = MediaType.APPLICATION_JSON_VALUE)
-    public Item[] getShopItems(@NotNull @RequestParam String gameId) {
+    public List<Item> getShopItems(@NotNull @RequestParam String gameId) {
         return restService.getShopItems(gameId);
     }
 

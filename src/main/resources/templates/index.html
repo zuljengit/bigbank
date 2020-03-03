@@ -24,7 +24,7 @@
                 <p>Turn: {{turn}}</p>
             </div>
             <div class="offset-top">
-                <button class="btn btn-success" v-on:click="getReputation">Get reputation</button>
+                <button class="btn btn-success" v-if="gameOn" v-on:click="getReputation">Get reputation</button>
             </div>
             <div class="offset-top">
                 <h4>Game reputation</h4>
@@ -40,7 +40,7 @@
         </div>
         <div class="tasks-div col-6">
             <div class="offset-top">
-                <button class="btn btn-success" v-on:click="getTasks">Get tasks</button>
+                <button class="btn btn-success" v-if="gameOn" v-on:click="getTasks">Get tasks</button>
             </div>
             <div class="offset-top">
                 <div v-for="task in tasks" class="jumbotron">
@@ -54,7 +54,7 @@
         </div>
         <div class="shop-div col-4">
             <div class="offset-top">
-                <button class="btn btn-success" v-on:click="getItems">Get items</button>
+                <button class="btn btn-success" v-if="gameOn" v-on:click="getItems">Get items</button>
             </div>
             <div class="offset-top">
                 <div v-for="item in items" class="jumbotron">
@@ -76,11 +76,11 @@
         data: {
             gameId: '', lives: '', gold: '', level: '', score: '', highScore: '', turn: '',
             people: '', state: '', underworld: '',
-            tasks: [], success: false, message: '', items: []
+            tasks: [], success: false, message: '', items: [], gameOn: false
         },
         methods: {
             startGame: function () {
-                this.reset();
+                this.resetGame();
                 axios
                     .post('start')
                     .then((response) => {
@@ -106,29 +106,34 @@
                 axios
                     .get('tasks', {params: {'gameId': this.gameId}})
                     .then((response) => {
+                        this.success = true;
                         this.tasks = response.data;
+                        this.message = 'Received total of: ' + this.tasks.length + ' tasks!';
                     });
             },
             solveTask: function (adId) {
                 axios
                     .post('solve', null, {params: {'gameId': this.gameId, 'adId': adId}})
                     .then((response) => {
+                        console.log('App success!');
+                        this.success = response.data.success;
+                        this.lives = response.data.lives;
+                        this.gold = response.data.gold;
+                        this.score = response.data.score;
+                        this.highScore = response.data.highScore;
+                        this.turn = response.data.turn;
+                        this.message = response.data.message;
+                        this.tasks.splice(this.tasks.findIndex(task => task.adId === adId), 1);
                         if (response.data.lives === 0) {
                             this.endGame();
-                        } else {
-                            this.success = response.data.success;
-                            this.lives = response.data.lives;
-                            this.gold = response.data.gold;
-                            this.score = response.data.score;
-                            this.highScore = response.data.highScore;
-                            this.turn = response.data.turn;
-                            this.message = response.data.message;
-                            this.tasks.splice(this.tasks.findIndex(task => task.adId === adId), 1);
                         }
-                    }, () => {
+                    })
+                    .catch((error) => {
+                        console.log('App error!');
+                        console.log(error.response.status);
                         this.success = false;
                         this.tasks = [];
-                        this.message = 'Tasks expired';
+                        this.message = 'Tasks have expired!';
                     });
             },
             getItems: function () {
@@ -136,7 +141,7 @@
                     .get('shop', {params: {'gameId': this.gameId}})
                     .then((response) => {
                         this.items = response.data;
-                    });
+                    })
             },
             buyItem: function (itemId, name, cost) {
                 if (cost > this.gold) {
@@ -155,14 +160,17 @@
                         this.message = 'Successfully bought ' + name + '!';
                     });
             },
-            reset: function () {
-                this.tasks = [];
+            resetGame: function () {
                 this.items = [];
+                this.tasks = [];
+                this.gameOn = true;
                 this.message = '';
             },
             endGame: function () {
+                this.gameOn = false;
                 this.items = [];
                 this.tasks = [];
+                this.message = 'GAME OVER!';
             }
         }
     });
